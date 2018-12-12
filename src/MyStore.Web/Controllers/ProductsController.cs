@@ -24,6 +24,8 @@ namespace MyStore.Web.Controllers
             => await Task.FromResult(_productsManager.Products);
 
         [HttpGet("{id:guid}")]
+//        [ProducesResponseType(typeof(Product), 200)]
+//        [ProducesResponseType(404)]
         public async Task<ActionResult<Product>> Get(Guid id)
         {
             var product = _productsManager.Products.SingleOrDefault(p => p.Id == id);

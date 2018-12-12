@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyStore.Web.Framework;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace MyStore.Web
 {
@@ -38,6 +39,26 @@ namespace MyStore.Web
                 .AddJsonOptions(o => o.SerializerSettings.Formatting = Formatting.Indented);
             services.AddTransient<ErrorHandlerMiddleware>();
             services.AddSingleton<ProductsManager>();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info
+                    {
+                        Title = "MyStore API",
+                        Version = "v1"
+                    }
+                );
+//                c.IncludeXmlComments();
+            });
+            
+            services.AddHealthChecks()
+                .AddCheck<RandomHealthCheck>("random");
+
+            services.AddHostedService<UsersProcessorHostedService>();
+            services.AddHttpClient<IReqResClient, ReqResClient>(c =>
+            {
+                c.BaseAddress = new Uri("https://reqres.in/api/");
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,6 +79,9 @@ namespace MyStore.Web
             app.UseMiddleware<ErrorHandlerMiddleware>();
             app.UseStaticFiles();
             app.UseCookiePolicy();
+            app.UseHealthChecks("/health");
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyStore API v1"));
 //            app.Use(async (ctx, next) =>
 //            {
 //                Console.WriteLine("BEFORE");
