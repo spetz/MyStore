@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
 
 namespace MyStore.Web
 {
@@ -31,6 +33,14 @@ namespace MyStore.Web
 //                        {
 //                            await response.WriteAsync("Hi!");
 //                        }));
+                })
+                .UseSerilog((ctx, cfg) =>
+                {
+                    cfg.Enrich.FromLogContext()
+                        .Enrich.WithProperty("Environment", ctx.HostingEnvironment.EnvironmentName)
+                        .Enrich.WithProperty("Application", ctx.HostingEnvironment.ApplicationName)
+                        .WriteTo.ColoredConsole()
+                        .MinimumLevel.Is(LogEventLevel.Information);
                 })
                 .UseStartup<Startup>();
     }
