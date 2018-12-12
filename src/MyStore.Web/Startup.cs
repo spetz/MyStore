@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyStore.Web.Framework;
+using Newtonsoft.Json;
 
 namespace MyStore.Web
 {
@@ -33,7 +34,8 @@ namespace MyStore.Web
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .AddJsonOptions(o => o.SerializerSettings.Formatting = Formatting.Indented);
             services.AddTransient<ErrorHandlerMiddleware>();
             services.AddSingleton<ProductsManager>();
         }

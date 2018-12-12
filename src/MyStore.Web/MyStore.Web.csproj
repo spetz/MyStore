@@ -14,9 +14,4 @@
     <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="3.0.1" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Folder Include="Controllers" />
-  </ItemGroup>
-
 </Project>
