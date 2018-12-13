@@ -1,50 +1,32 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MyStore.Services;
-using MyStore.Services.Products;
 using MyStore.Services.Products.Commands;
 using MyStore.Services.Products.Dto;
-using MyStore.Web.Framework;
-using MyStore.Web.Models;
+using MyStore.Services.Products.Queries;
 
 namespace MyStore.Web.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductsController : Controller
+    public class ProductsController : BaseController
     {
-        private readonly ICommandDispatcher _commandDispatcher;
-
-        public ProductsController(ICommandDispatcher commandDispatcher)
+        public ProductsController(IDispatcher dispatcher) : base(dispatcher)
         {
-            _commandDispatcher = commandDispatcher;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> Get(string name)
-            => Ok(await _productService.BrowseAsync(name));
+        public async Task<ActionResult<IEnumerable<ProductDto>>> Get([FromQuery] BrowseProducts query)
+            => Result(await QueryAsync(query));
 
         [HttpGet("{id:guid}")]
-//        [ProducesResponseType(typeof(Product), 200)]
-//        [ProducesResponseType(404)]
         public async Task<ActionResult<ProductDto>> Get(Guid id)
-        {
-            var product = await _productService.GetAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            return product;
-        }
+            => Result(await QueryAsync(new GetProduct {Id = id}));
 
         [HttpPost]
         public async Task<ActionResult> Post(CreateProduct command)
         {
-            await _commandDispatcher.SendAsync(command);
+            await SendAsync(command);
 
             return CreatedAtAction(nameof(Get), new {id = command.Id}, null);
         }
