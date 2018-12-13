@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MyStore.Services;
 using MyStore.Services.Products;
+using MyStore.Services.Products.Commands;
 using MyStore.Services.Products.Dto;
 using MyStore.Web.Framework;
 using MyStore.Web.Models;
@@ -14,11 +16,11 @@ namespace MyStore.Web.Controllers
     [ApiController]
     public class ProductsController : Controller
     {
-        private readonly IProductService _productService;
+        private readonly ICommandDispatcher _commandDispatcher;
 
-        public ProductsController(IProductService productService)
+        public ProductsController(ICommandDispatcher commandDispatcher)
         {
-            _productService = productService;
+            _commandDispatcher = commandDispatcher;
         }
 
         [HttpGet]
@@ -40,12 +42,11 @@ namespace MyStore.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(ProductDto product)
+        public async Task<ActionResult> Post(CreateProduct command)
         {
-            product.Id = Guid.NewGuid();
-            await _productService.AddAsync(product);
+            await _commandDispatcher.SendAsync(command);
 
-            return CreatedAtAction(nameof(Get), new {id = product.Id}, null);
+            return CreatedAtAction(nameof(Get), new {id = command.Id}, null);
         }
     }
 }
