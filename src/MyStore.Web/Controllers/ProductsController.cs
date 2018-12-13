@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MyStore.Services.Products;
+using MyStore.Services.Products.Dto;
 using MyStore.Web.Framework;
 using MyStore.Web.Models;
 
@@ -12,37 +14,36 @@ namespace MyStore.Web.Controllers
     [ApiController]
     public class ProductsController : Controller
     {
-        private readonly ProductsManager _productsManager;
+        private readonly IProductService _productService;
 
-        public ProductsController(ProductsManager productsManager)
+        public ProductsController(IProductService productService)
         {
-            _productsManager = productsManager;
+            _productService = productService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> Get()
-            => await Task.FromResult(_productsManager.Products);
+        public async Task<ActionResult<IEnumerable<ProductDto>>> Get(string name)
+            => Ok(await _productService.BrowseAsync(name));
 
         [HttpGet("{id:guid}")]
 //        [ProducesResponseType(typeof(Product), 200)]
 //        [ProducesResponseType(404)]
-        public async Task<ActionResult<Product>> Get(Guid id)
+        public async Task<ActionResult<ProductDto>> Get(Guid id)
         {
-            var product = _productsManager.Products.SingleOrDefault(p => p.Id == id);
+            var product = await _productService.GetAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            return await Task.FromResult(product);
+            return product;
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(Product product)
+        public async Task<ActionResult> Post(ProductDto product)
         {
             product.Id = Guid.NewGuid();
-            _productsManager.Products.Add(product);
-            await Task.CompletedTask;
+            await _productService.AddAsync(product);
 
             return CreatedAtAction(nameof(Get), new {id = product.Id}, null);
         }

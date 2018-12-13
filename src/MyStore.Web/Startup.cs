@@ -44,7 +44,6 @@ namespace MyStore.Web
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddJsonOptions(o => o.SerializerSettings.Formatting = Formatting.Indented);
             services.AddTransient<ErrorHandlerMiddleware>();
-            services.AddSingleton<ProductsManager>();
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
 //            services.AddDistributedRedisCache(c =>
@@ -75,8 +74,6 @@ namespace MyStore.Web
             
             var builder =  new ContainerBuilder();
             builder.Populate(services);
-            builder.RegisterAssemblyTypes(Assembly.GetEntryAssembly())
-                .AsImplementedInterfaces();
             builder.RegisterModule<InfrastructureModule>();
             builder.RegisterModule<ServicesModule>();
             Container = builder.Build();

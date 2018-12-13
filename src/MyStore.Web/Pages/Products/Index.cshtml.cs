@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MyStore.Services.Products;
+using MyStore.Services.Products.Dto;
 using MyStore.Web.Framework;
 using MyStore.Web.Models;
 
@@ -12,9 +14,9 @@ namespace MyStore.Web.Pages.Products
 {
     public class IndexModel : PageModel
     {
-        private readonly ProductsManager _productsManager;
+        private readonly IProductService _productService;
 
-        public IEnumerable<Product> Products => _productsManager.Products;
+        public IEnumerable<ProductDto> Products { get; private set; }
 
         public IEnumerable<SelectListItem> Categories => new List<SelectListItem>
         {
@@ -23,15 +25,16 @@ namespace MyStore.Web.Pages.Products
         };
         
         [BindProperty]
-        public Product Product { get; set; } = new Product();
+        public ProductDto Product { get; set; } = new ProductDto();
 
-        public IndexModel(ProductsManager productsManager)
+        public IndexModel(IProductService productService)
         {
-            _productsManager = productsManager;
+            _productService = productService;
         }
         
-        public void OnGet()
+        public async Task OnGetAsync()
         {
+            Products = await _productService.BrowseAsync();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -41,18 +44,16 @@ namespace MyStore.Web.Pages.Products
                 return Page();
             }
 
-            await Task.CompletedTask;
             Product.Id = Guid.NewGuid();
-            _productsManager.Products.Add(Product);
+            await _productService.AddAsync(Product);
 
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDeleteAsync(Guid id)
         {
-            _productsManager.Products.Remove(Products.SingleOrDefault(p => p.Id == id));
-            await Task.CompletedTask;
-
+            await _productService.DeleteAsync(id);
+            
             return RedirectToPage();
         }
     }

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using MyStore.Services.Products;
+using MyStore.Services.Products.Dto;
 using MyStore.Web.Framework;
 using MyStore.Web.Models;
 
@@ -9,18 +12,18 @@ namespace MyStore.Web.Pages.Products
 {
     public class DetailsModel : PageModel
     {
-        private readonly ProductsManager _productsManager;
+        private readonly IProductService _productService;
         
-        public Product Product { get; private set; }
+        public ProductDto Product { get; private set; }
 
-        public DetailsModel(ProductsManager productsManager)
+        public DetailsModel(IProductService productService)
         {
-            _productsManager = productsManager;
+            _productService = productService;
         }
 
-        public IActionResult OnGet(Guid id)
+        public async Task<IActionResult> OnGetAsync(Guid id)
         {
-            Product = _productsManager.Products.SingleOrDefault(p => p.Id == id);
+            Product = await _productService.GetAsync(id);
             if (Product == null)
             {
                 return NotFound();
