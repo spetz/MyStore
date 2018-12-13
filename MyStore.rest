@@ -1,0 +1,4 @@
+@url = http://localhost:5000/api
+
+###
+POST {{url}}/account/login

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +14,9 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using MyStore.Infrastructure;
+using MyStore.Infrastructure.Auth;
 using MyStore.Services;
 using MyStore.Web.Framework;
 using Newtonsoft.Json;
@@ -71,6 +75,23 @@ namespace MyStore.Web
             {
                 c.BaseAddress = new Uri("https://reqres.in/api/");
             });
+
+            var jwtSection = Configuration.GetSection("jwt");
+            services.Configure<JwtOptions>(jwtSection);
+            var jwtOptions = new JwtOptions();
+            jwtSection.Bind(jwtOptions);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(c =>
+                {
+                    c.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+                        ValidIssuer = jwtOptions.Issuer,
+                        ValidateAudience = jwtOptions.ValidateAudience,
+                        ValidateLifetime = jwtOptions.ValidateLifetime
+                    };
+                });
             
             var builder =  new ContainerBuilder();
             builder.Populate(services);
@@ -97,6 +118,7 @@ namespace MyStore.Web
             }
 
 //            app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMiddleware<ErrorHandlerMiddleware>();
             app.UseStaticFiles();
             app.UseCookiePolicy();
