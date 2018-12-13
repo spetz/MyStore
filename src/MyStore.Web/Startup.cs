@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +12,8 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MyStore.Infrastructure;
+using MyStore.Services;
 using MyStore.Web.Framework;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
@@ -18,6 +23,7 @@ namespace MyStore.Web
     public class Startup
     {
         public IConfiguration Configuration { get; }
+        public IContainer Container { get; private set; }
 
         public Startup(IConfiguration configuration)
         {
@@ -25,7 +31,7 @@ namespace MyStore.Web
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppOptions>(Configuration.GetSection("app"));
             services.Configure<CookiePolicyOptions>(options =>
@@ -39,6 +45,13 @@ namespace MyStore.Web
                 .AddJsonOptions(o => o.SerializerSettings.Formatting = Formatting.Indented);
             services.AddTransient<ErrorHandlerMiddleware>();
             services.AddSingleton<ProductsManager>();
+            services.AddMemoryCache();
+            services.AddDistributedMemoryCache();
+//            services.AddDistributedRedisCache(c =>
+//            {
+//                c.Configuration = "localhost";
+//                c.InstanceName = "api:";
+//            });
 
             services.AddSwaggerGen(c =>
             {
@@ -59,10 +72,21 @@ namespace MyStore.Web
             {
                 c.BaseAddress = new Uri("https://reqres.in/api/");
             });
+            
+            var builder =  new ContainerBuilder();
+            builder.Populate(services);
+            builder.RegisterAssemblyTypes(Assembly.GetEntryAssembly())
+                .AsImplementedInterfaces();
+            builder.RegisterModule<InfrastructureModule>();
+            builder.RegisterModule<ServicesModule>();
+            Container = builder.Build();
+
+            return new AutofacServiceProvider(Container);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
+            IApplicationLifetime lifetime)
         {
             if (env.IsDevelopment())
             {
@@ -94,6 +118,8 @@ namespace MyStore.Web
 //            });
 
             app.UseMvc();
+
+            lifetime.ApplicationStopped.Register(() => Container.Dispose());
         }
     }
 }
