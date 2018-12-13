@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MyStore.Infrastructure;
 using MyStore.Infrastructure.Auth;
+using MyStore.Infrastructure.EF;
 using MyStore.Services;
 using MyStore.Web.Framework;
 using Newtonsoft.Json;
@@ -38,6 +39,7 @@ namespace MyStore.Web
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppOptions>(Configuration.GetSection("app"));
+            services.Configure<SqlOptions>(Configuration.GetSection("sql"));
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -66,7 +68,7 @@ namespace MyStore.Web
                 );
 //                c.IncludeXmlComments();
             });
-            
+
             services.AddHealthChecks()
                 .AddCheck<RandomHealthCheck>("random");
 
@@ -75,6 +77,8 @@ namespace MyStore.Web
             {
                 c.BaseAddress = new Uri("https://reqres.in/api/");
             });
+
+            services.AddDbContext<MyStoreContext>();
 
             var jwtSection = Configuration.GetSection("jwt");
             services.Configure<JwtOptions>(jwtSection);
@@ -92,6 +96,8 @@ namespace MyStore.Web
                         ValidateLifetime = jwtOptions.ValidateLifetime
                     };
                 });
+
+            services.AddAuthorization(c => c.AddPolicy("is-admin", p => { p.RequireRole("admin"); }));
             
             var builder =  new ContainerBuilder();
             builder.Populate(services);
@@ -104,7 +110,7 @@ namespace MyStore.Web
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env,
-            IApplicationLifetime lifetime)
+            IApplicationLifetime lifetime, MyStoreContext myStoreContext)
         {
             if (env.IsDevelopment())
             {

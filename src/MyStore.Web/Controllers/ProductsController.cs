@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyStore.Services;
 using MyStore.Services.Products.Commands;
@@ -24,6 +25,7 @@ namespace MyStore.Web.Controllers
             => Result(await QueryAsync(new GetProduct {Id = id}));
 
         [HttpPost]
+        [Authorize(Policy = "is-admin")]
         public async Task<ActionResult> Post(CreateProduct command)
         {
             await SendAsync(command);
