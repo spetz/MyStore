@@ -143,6 +143,7 @@ namespace MyStore.Web
 //            });
 
             app.UseMvc();
+            myStoreContext.Database.EnsureCreated();
 
             lifetime.ApplicationStopped.Register(() => Container.Dispose());
         }
