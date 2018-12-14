@@ -1,0 +1,33 @@
+version: "3.5"
+
+services:
+  web:
+    image: mystore.web
+    container_name: mystore.web
+    depends_on: 
+      - mssql
+    ports:
+      - 5050:5000
+    networks:
+      - mystore
+
+  mssql:
+    image: microsoft/mssql-server-linux
+    container_name: mssql
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Abcd1234!
+    volumes:
+      - mssql:/var/opt/mssql
+    networks:
+      - mystore
+
+networks:
+  mystore:
+    name: mystore-network
+
+volumes:
+  mssql:
+    driver: local

@@ -1,0 +1,23 @@
+version: "3.5"
+
+services:
+  mssql:
+    image: microsoft/mssql-server-linux
+    container_name: mssql
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Abcd1234!
+    volumes:
+      - mssql:/var/opt/mssql
+    networks:
+      - mystore
+
+networks:
+  mystore:
+    name: mystore-network
+
+volumes:
+  mssql:
+    driver: local

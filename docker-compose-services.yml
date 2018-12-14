@@ -1,0 +1,15 @@
+version: "3.5"
+
+services:
+  web:
+    image: mystore.web
+    container_name: mystore.web
+    ports:
+      - 5050:5000
+    networks:
+      - mystore
+
+networks:
+  mystore:
+    name: mystore-network
+    external: true
