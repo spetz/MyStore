@@ -11,7 +11,7 @@ namespace MyStore.Web.Pages
     {
         public void OnGet()
         {
-            throw new Exception("Oopps");
+            throw new ArgumentException("Ooopsss...");
         }
     }
 }
